@@ -231,16 +231,12 @@ y_test = np.empty((0,))
 #size_test= ['_39','', '', '', '', '', '', '', '', '', '']
 
 # Tailor made test
-#size=      [100, 200, 300, 400, 500, 600]
-#cat_size = [100, 100, 100, 100, 100, 100]
-#size_test= ['', '', '', '', '', '']
-size=      [40, 100, 200]
-cat_size = [100, 100, 100]
-size_test= ['', '', '']
+size=      [100, 200, 300, 400, 500, 600]
+cat_size = [100, 100, 100, 100, 100, 100]
+size_test= ['', '', '', '', '', '']
 
 #FEATURE_MAP = [amplitude_embedding_circuit,  pauli_xx_circuit, pauli_xy_circuit, pauli_xz_circuit, pauli_yx_circuit, pauli_yy_circuit, pauli_yz_circuit, pauli_zx_circuit, pauli_zy_circuit, pauli_zz_circuit, pauli_zrz_circuit, pauli_xyz_circuit, pauli_zxx_circuit, pauli_zyyzxz_circuit]#All
-#FEATURE_MAP = [amplitude_embedding_circuit, pauli_zz_circuit, pauli_xx_circuit, pauli_yy_circuit, pauli_zxx_circuit, pauli_zrz_circuit, pauli_xyz_circuit]
-FEATURE_MAP = [amplitude_embedding_circuit, pauli_zz_circuit]
+FEATURE_MAP = [amplitude_embedding_circuit, pauli_zz_circuit, pauli_xx_circuit, pauli_yy_circuit, pauli_zxx_circuit, pauli_zrz_circuit, pauli_xyz_circuit]
 fm_reps = 2
 
 nqubits_amplitude=3
