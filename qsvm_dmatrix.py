@@ -237,6 +237,7 @@ size_test= ['', '', '', '', '', '']
 
 #FEATURE_MAP = [amplitude_embedding_circuit,  pauli_xx_circuit, pauli_xy_circuit, pauli_xz_circuit, pauli_yx_circuit, pauli_yy_circuit, pauli_yz_circuit, pauli_zx_circuit, pauli_zy_circuit, pauli_zz_circuit, pauli_zrz_circuit, pauli_xyz_circuit, pauli_zxx_circuit, pauli_zyyzxz_circuit]#All
 FEATURE_MAP = [amplitude_embedding_circuit, pauli_zz_circuit, pauli_xx_circuit, pauli_yy_circuit, pauli_zxx_circuit, pauli_zrz_circuit, pauli_xyz_circuit]
+PRE_COMPUTE_PSI = True
 fm_reps = 2
 
 nqubits_amplitude=3
@@ -249,6 +250,15 @@ n_pca_pauli=8
 # OPERATIONAL FUNCTIONS
 # -----------------------------
 #
+# Precomputes the statevectors for a given dataset X and embedding function, returns an array of statevectors
+def precompute_statevectors(X, embedding_fn):
+    states = []
+    for x in X:
+        qc = embedding_fn(x)
+        psi = Statevector.from_instruction(qc).data
+        states.append(psi)
+    return np.asarray(states, dtype=complex)
+    
 # The kernel circuit to compute the kernel value for two samples a and b.
 def kernel_circ(a,b, embedding_fn):
     qc_a = embedding_fn(a)
@@ -274,6 +284,26 @@ def qkernel(A, B, featuremap):
           _ind += 1
   if verbose: print("\nGram Matrix completed.")
   return GramMat
+
+# Optimized version of the quantum kernel function that precomputes statevectors and computes the Gram matrix using matrix operations
+def qkernel_precomp(A, B, featuremap):
+    if verbose:
+        print(f"Creating Gram Matrix for {len(A)}x{len(B)} samples...")
+
+    # Precompute all embedded quantum states
+    psi_A = precompute_statevectors(A, featuremap)   # shape: (len(A), dim)
+    psi_B = precompute_statevectors(B, featuremap)   # shape: (len(B), dim)
+
+    # Compute all pairwise inner products at once
+    overlaps = psi_A.conj() @ psi_B.T                # shape: (len(A), len(B))
+
+    # Quantum kernel = |<psi_a | psi_b>|^2
+    GramMat = np.abs(overlaps) ** 2
+
+    if verbose:
+        print("Gram Matrix completed.")
+
+    return GramMat
 
 # Logging experiment attributes to MLflow
 def log_mlflow_attributes(dim, fm, fm_reps, train_data, test_data):
@@ -385,7 +415,10 @@ def execute_experiments():
       print(f"Training for {sz} records, with feature map: {(str)(fm.__name__)}", )
       
       xs_train, xs_test, y_train, y_test = load_dataset(fm, sz, st)
-      qkernel_fixed = partial(qkernel, featuremap=fm)
+      if PRE_COMPUTE_PSI:
+        qkernel_fixed = partial(qkernel_precomp, featuremap=fm)
+      else:
+        qkernel_fixed = partial(qkernel, featuremap=fm)
       
       start= time.time()
       # Training of the SVM, compute predictions and metrics 
